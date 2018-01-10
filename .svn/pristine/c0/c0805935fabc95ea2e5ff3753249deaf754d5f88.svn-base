@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<constant name="struts.custom.i18n.resources" value="lang_zh_CN"></constant>
+	<constant name="struts.i18n.reload" value="true"></constant>
+	<package name="default" namespace="/" extends="struts-default">
+        <default-action-ref name="index" />
+
+        <global-results>
+            <result name="error">/error.jsp</result>
+        </global-results>
+
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Exception" result="error"/>
+        </global-exception-mappings>
+		<action name="LoginAction_*" class="com.vp.controller.LoginAction" method="{1}">
+			<result name="input">/login.jsp</result>
+			<result name="success" type="redirect">${retURL}</result>
+		</action>
+		<action name="SettingAction_*" class="com.vp.controller.SettingAction" method="{1}">
+			<result name="input">/resetpwd.jsp</result>
+			<result name="success">/login.jsp</result>
+			<result name="setting">/setting.jsp</result>
+			<result name="index" type="chain">WaterRecordAction_recordInput</result>
+		</action>
+		<action name="WorkerAction_*" class="com.vp.controller.WorkerAction" method="{1}">
+			<result name="success">/worker.jsp</result>
+		</action>
+		<action name="UserAction_*" class="com.vp.controller.UserAction" method="{1}">
+			<result name="input">/useredit.jsp</result>
+			<result name="success" >/userview.jsp</result>
+			<result name="searchUser" type="chain">UserAction_searchUser</result>
+			<result name="preEdit" type="redirect">UserAction_preEdit</result>
+			<result name="noinput">/noinput.jsp</result>
+		</action>
+		<action name="WaterRecordAction_*" class="com.vp.controller.WaterRecordAction" method="{1}">
+			<result name="success">/index.jsp</result>
+			<result name="billview">/billview.jsp</result>
+			<result name="billdetail">/billdetail.jsp</result>
+			<result name="noinput_back" type="chain">UserAction_noInput</result>
+		</action>
+    </package>
+
+    <include file="struts-du.xml"/>
+</struts>

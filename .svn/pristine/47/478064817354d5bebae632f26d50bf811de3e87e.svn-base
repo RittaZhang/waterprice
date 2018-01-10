@@ -1,0 +1,13 @@
+package com.vp.test;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import com.vp.dbconn.DBConnection;
+
+public class MyTest {
+	public static void main(String[] args) throws SQLException {
+		Connection conn = DBConnection.getConn();
+		System.out.println(conn.isClosed());
+	}
+}

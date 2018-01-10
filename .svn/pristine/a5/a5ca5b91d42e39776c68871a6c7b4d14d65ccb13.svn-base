@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<constant name="struts.custom.i18n.resources" value="lang_zh_CN"></constant>
+	<constant name="struts.i18n.reload" value="true"></constant>
+	<constant name="struts.multipart.maxSize" value="104857600" />
+	<package name="jsonDefault" namespace="/json" extends="json-default">
+		<action name="ZoneAction_Async_*" class="com.vp.controller.ZoneAction" method="{1}">
+			<result type="json" name="success">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+		<action name="WorkerAction_Async_*" class="com.vp.controller.WorkerAction" method="{1}">
+			<result type="json" name="success">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+		<action name="DbAction_Async_*" class="com.vp.controller.DbAction" method="{1}">
+			<result type="json">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+		<action name="WaterRecordAction_Async_*" class="com.vp.controller.WaterRecordAction" method="{1}">
+			<result type="json">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+		<action name="SettingAction_Async_*" class="com.vp.controller.SettingAction" method="{1}">
+			<result type="json">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+		<action name="UserAction_Async_*" class="com.vp.controller.UserAction" method="{1}">
+			<result type="json">
+				<param name="root">dataMap</param>
+			</result>
+		</action>
+	</package>
+</struts>

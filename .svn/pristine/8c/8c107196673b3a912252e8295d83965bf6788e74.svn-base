@@ -1,0 +1,318 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.vp.util.Label" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title><%=Label.getString("useredit.pagename") %></title>
+<link rel="shortcut icon" type="image/x-icon" href="img/cock.ico" >
+<link href="css/common.css" rel="stylesheet" type="text/css"/>
+<link href="css/pagination.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="js/jquery.pagination.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+</head>
+<script>
+window.onload = function(){
+	selectionInit();
+	checkEditable();
+	document.getElementById("userId").onchange = function(){
+		document.getElementById("userId_hidden").value = this.value;
+	};
+	var rowCount = parseInt("${rowCount}");
+	$("#New_pagination").pagination(rowCount,{
+		items_per_page:parseInt("${recordPageSize}"),
+		next_text:"<%=Label.getString("common.nextpage") %>",
+		prev_text:"<%=Label.getString("common.prevpage") %>",
+		current_page:parseInt("${currentPage}"),
+		num_display_entries:5,
+		num_edge_entries:2,
+		load_first_page:false,
+        callback:searchUser
+	});
+	setSortClass();
+	
+	$("#submit_btn").click(function(){
+		if(nullCheck()){
+			$.ajax({
+				url:"json/UserAction_Async_saveUser",
+				type:"POST",
+				data:$("#userForm").serialize(),
+				async:true,
+				success:function(data){
+					$("#addMessage").text(data.message);
+					clearValue();
+				},
+				error:function(data){
+					$("#addMessage").text(data.message);
+				}
+			});
+		}
+	});
+	$("#cancel_btn").click(function(){
+		location.href = "UserAction_goBack";
+	});
+}
+function selectionInit(){
+	var editType='${user.type}';
+	var editZone='${user.zone}';
+	var oSel1=document.getElementById("sel1").options;
+	var oSel2=document.getElementById("sel2").options;
+	for (var i = 0; i < oSel1.length; i++) { 
+		if(editType == oSel1[i].value){
+			oSel1[i].selected = true;
+			break;
+		}
+	}
+	for (var j = 0; j < oSel2.length; j++) { 
+		if(editZone == oSel2[j].value){
+			oSel2[j].selected = true;
+			break;
+		}
+	}
+}
+
+function searchUser(new_page_index, pagination_container){
+	var id = document.getElementById("userId").value; 
+	var order = document.getElementById("order").value;
+	var by = document.getElementById("by").value;
+	var url = "UserAction_preEdit?u=1";
+	if(id != null && id != ''){
+		url += "&id="+id;
+	}
+	if(by==null||by==''){
+		by = "w.month";
+	}
+	if(order==null||order==''){
+		order = "asc";
+	}
+	if(new_page_index == undefined){
+		new_page_index=0;
+	}
+	url += "&by="+by+"&order="+order;
+	url += "&currentPage="+new_page_index;
+	location.href = url;
+}
+
+function setOrderBy(by){
+	document.getElementById("by").value = by;
+	var order = document.getElementById("order").value;
+	if(order == "asc"){
+		document.getElementById("order").value = "desc";
+	}else{
+		document.getElementById("order").value = "asc";
+	}
+	searchUser();
+}
+
+function setSortClass(){
+	var order = document.getElementById("order").value;
+	var by = document.getElementById("by").value;
+	by = by.replace(".","_");
+	if(order == "desc"){
+		$(".userbillDiv th a#"+by+"_a").addClass("sortDesc");
+	}else{
+		$(".userbillDiv th a#"+by+"_a").addClass("sortAsc");
+	}
+}
+function checkEditable(){
+	var editable = "${editable}";
+	var userTitle = document.getElementById("userTitle");
+	var userBillview = document.getElementById("userBillview");
+	if(editable == "false"){
+		document.getElementById("userId").disabled = true;//不可编辑
+		userTitle.innerText = "<%=Label.getString("useredit.edittitle") %>";
+		userBillview.style.display = "inline";
+	}else{
+		document.getElementById("userId").disabled = false;//可编辑
+		userTitle.innerText = "<%=Label.getString("useredit.addtitle") %>";
+		userBillview.style.display = "none";
+	}
+}
+var valid = false;
+function checkUser(){
+	var userId = document.getElementById("userId").value; 
+	userId = $.trim(userId);
+	if(userId.length==1){
+		userId="000"+userId;
+	}else if(userId.length==2){
+		userId="00"+userId;
+	}else if(userId.length==3){
+		userId="0"+userId;
+	}
+	var params = {
+			"userId":userId
+	};
+	$.ajax({
+		url:"json/UserAction_Async_validateUser",
+		method:"post",
+		data:params,
+		success:function(data){
+			if(data.correct == true){
+				valid = true;
+				document.getElementById("message1").innerText = "";
+			}else{
+				valid = false;
+				document.getElementById("message1").innerText = "<%=Label.getString("useredit.message1") %>";
+			}
+		},
+		error:function(){
+			alert("<%=Label.getString("useredit.message2") %>");
+		}
+	});
+}
+
+function nullCheck(){
+	var flag = true;
+	var userId = document.getElementById("userId").value;
+	var userLastName = document.getElementById("userLastName").value;
+	//var userFirstName = document.getElementById("userFirstName").value;
+	var userAddress = document.getElementById("userAddress").value;
+	userId = $.trim(userId);
+	userLastName = $.trim(userLastName);
+	//userFirstName = $.trim(userFirstName);
+	userAddress = $.trim(userAddress);
+	if(isNull(userId) || isNull(userLastName) || isNull(userAddress)){
+		flag = false;
+		alert("<%=Label.getString("useredit.message3") %>");
+	}else{
+		flag = true;
+	}
+	var editable = "${editable}";
+	if(editable == "false"){
+		return flag;
+	}else{
+		return flag&&valid;
+	}
+	
+}
+function clearValue(){
+	document.getElementById("userId").value = "";
+	document.getElementById("userLastName").value = "";
+	//document.getElementById("userFirstName").value = "";
+	document.getElementById("userAddress").value = "";
+}
+</script>
+<style>
+	.nav li:nth-child(6) span{color:#ee0000;}
+	#message1{color:red;font-size:12px;}
+	.userbillDiv th img{display:none;}
+</style>
+<body>
+<div class="menu">
+	<jsp:include page="menu.jsp"></jsp:include>
+</div>
+<div class="editDiv">
+<form id="userForm">
+<div class="editMain">
+	<table class="editTable">
+		<tr>
+			<th>&nbsp;</th>
+			<th><span id="userTitle"></span></th>
+			<th>&nbsp;</th>
+		</tr>
+		<tr>
+			<td><%=Label.getString("useredit.useraccount") %></td>
+			<td>
+				<input type="text" value="${user.id}" id="userId" onblur="checkUser();" />
+				<input type="hidden" name="user.id" value="${user.id}" id="userId_hidden"/>
+			</td>
+			<td><span id="message1" style="display:inline;"></span></td>
+		</tr>
+		<tr>
+			<td>用户姓名</td>
+			<td><input type="text" name="user.lastName" value="${user.lastName}" id="userLastName"/></td>
+			<td>&nbsp;</td>
+		</tr>
+		<!--  <tr>
+			<td><%=Label.getString("useredit.firstname") %></td>
+			<td><input type="text" name="user.firstName" value="${user.firstName}" id="userFirstName"/></td>
+			<td>&nbsp;</td>
+		</tr>-->
+		<tr>
+			<td><%=Label.getString("useredit.usertype") %></td>
+			<td><select name="user.type" id="sel1" class="common_select">
+				<option value="<%=Label.getString("useredit.normal") %>"><%=Label.getString("useredit.normal") %></option>
+				<option value="<%=Label.getString("useredit.business") %>"><%=Label.getString("useredit.business") %></option>
+			</select>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td><%=Label.getString("useredit.zone") %></td>
+			<td><select name="user.zone" id="sel2" class="common_select">
+			<c:forEach items="${zoneList}" var="zone">
+				<option value="${zone}">${zone}</option>
+			</c:forEach>
+			</select>
+			</td>
+			<td>&nbsp;</td>
+		</tr>	
+		<tr>
+			<td><%=Label.getString("useredit.useraddress") %></td>
+			<td><input type="text" name="user.address" value="${user.address}" id="userAddress"/></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<input id="submit_btn" type="button" value="<%=Label.getString("common.save") %>" class="common_btn"/>
+				<input id="cancel_btn" class="common_btn" type="button" value="<%=Label.getString("common.cancel") %>">
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+</div>
+<div class="addMessage">
+	<font color="red" id="addMessage">${message}</font>
+</div>
+</form>
+<div>
+	<input type="hidden" value="${order}" id="order">
+	<input type="hidden" value="${by}" id="by">	
+</div>
+<div id="userBillview">
+	<div class="userbillDiv">
+		<div class="userbillTitle"><strong><%=Label.getString("useredit.billview") %></strong></div>
+		<table border="1" cellspacing="0">
+			<tr>
+				<th><a onclick="setOrderBy('w.swiftNumber')" id="w_swiftNumber_a"><%=Label.getString("useredit.swiftNumber") %><img src="img/arrow_up.png"></a></th>
+				<th><%=Label.getString("useredit.useraccount") %></th>
+				<th><%=Label.getString("billdetail.lastmeterquantity") %></th>
+				<th><%=Label.getString("billdetail.nowmeterquantity") %></th>
+				<th><a onclick="setOrderBy('w.month')" id="w_month_a"><%=Label.getString("billdetail.month") %><img src="img/arrow_up.png"></a></th>
+				<th><a onclick="setOrderBy('w.printDate')" id="w_printDate_a"><%=Label.getString("billdetail.printdate") %><img src="img/arrow_up.png"></a></th>
+				<th><%=Label.getString("billdetail.nowshouldcollect") %></th>
+				<th><%=Label.getString("billdetail.nowrealcollect") %></th>
+				<th><%=Label.getString("billdetail.collector") %></th>
+				<th><%=Label.getString("common.operate") %></th>
+			</tr>
+			<c:forEach items="${recordList}" var="rd">	
+			<tr>
+				<td>${rd.swiftNumber}</td>
+				<td>${rd.user.id}</td>
+				<td>${rd.lastQuantity}</td>
+				<td>${rd.nowQuantity}</td>
+				<td>
+					<fmt:formatDate value="${rd.month}" pattern="yyyy-MM" var="month"/>
+					<span>${month}</span>
+				</td>
+				<td>${rd.printDate}</td>
+				<td>${rd.nowShouldCollect}</td>
+				<td>${rd.nowRealCollect}</td>
+				<td>${rd.tollCollector}</td>
+				<td><a href="WaterRecordAction_detail?id=${rd.id}&fromPage=useredit"><%=Label.getString("common.detail") %></a></td>
+			</tr>
+			</c:forEach>
+		</table>
+	</div>
+	<div id="New_pagination" class="userOpr">
+	</div>
+</div>
+</div>
+<jsp:include page="foot.jsp"></jsp:include>
+</body>
+</html>
